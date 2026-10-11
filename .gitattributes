@@ -1,0 +1,6 @@
+# 本协议包硬性要求 LF 换行（自检 P6 会校验）；禁止 git 做 CRLF 转换。
+# 附录 D 是工具箱的逐字节副本，任何换行改写都会破坏一致性校验。
+* text=auto eol=lf
+*.zip binary
+*.xlsx binary
+*.png binary

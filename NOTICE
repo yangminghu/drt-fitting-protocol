@@ -1,0 +1,14 @@
+DRT 拟合规范（drt-fitting-protocol）
+Copyright 2026 Yangming Hu
+
+本产品包含由 Yangming Hu 独立开发的文档、协议正文与脚本，采用 Apache License 2.0 授权。
+许可证全文见仓库根 LICENSE。
+
+运行环境与第三方依赖
+  本 skill 面向 DeepSeek Harness 制作，兼容其他支持 SKILL.md 的 agent。
+  本产品不包含、也不分发任何第三方库；下列依赖由运行环境提供，各自适用其自身许可证：
+    numpy、scipy、openpyxl、matplotlib
+
+归属
+  本产品与 Anthropic、DeepSeek 及其他任何组织无隶属、赞助或背书关系。
+  文中提及的产品名称仅用于说明运行环境与兼容性，相关商标归各自所有者。
