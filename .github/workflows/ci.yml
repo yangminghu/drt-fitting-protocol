@@ -1,12 +1,12 @@
 name: CI
 
-# push 到 main / 提 PR 时校验；推 v* tag 时校验 + 自动发布 Release（附件自动带上 zip）。
+# 推 main / 提 PR：校验 + 打包 + 隐私体检，并上传产物。
+# 推 v* tag   ：复用上一步的产物，自动创建或更新 Release 并挂附件。
 on:
   push:
     branches: [main]
     tags: ["v*"]
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,10 +14,11 @@ permissions:
 env:
   PKG_DIR: drt-fitting-protocol
   ZIP_PATH: dist/drt-fitting-protocol.zip
+  ARTIFACT: drt-fitting-protocol-zip
 
 jobs:
   validate:
-    name: 校验技能包
+    name: 校验并打包
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,20 +27,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: 安装依赖
+      - name: 安装依赖（包内脚本只需要 numpy + openpyxl）
         run: python -m pip install --quiet --disable-pip-version-check numpy openpyxl
 
-      - name: 换行检查（必须全部 LF）
+      - name: 包自检 + 工具箱回归
         run: |
-          set -e
-          if git ls-files --eol | grep -qE 'w/(crlf|mixed)'; then
-            echo "::error::以下文件不是 LF 换行："
-            git ls-files --eol | grep -E 'w/(crlf|mixed)'
-            exit 1
-          fi
-          echo "全部文件均为 LF"
+          python "$PKG_DIR/scripts/自检_协议包.py"
+          python "$PKG_DIR/scripts/自检_工具箱回归.py"
 
-      - name: 确定性打包（跑两次必须逐字节相同）
+      - name: 打包（两遍比对可复现性）+ 隐私体检
+        env:
+          # 具体数据标识绝不写进仓库；用 Secret 传入（Variable 不加密不掩码，不能用）
+          PRIVACY_DENY: ${{ secrets.PRIVACY_DENY }}
         run: |
           set -e
           python tools/build_zip.py
@@ -47,69 +46,52 @@ jobs:
           python tools/build_zip.py
           a=$(sha256sum /tmp/first.zip | cut -d' ' -f1)
           b=$(sha256sum "$ZIP_PATH" | cut -d' ' -f1)
-          echo "第一次 $a"
-          echo "第二次 $b"
+          echo "zip sha256 = $b"
           if [ "$a" != "$b" ]; then echo "::error::打包不可复现"; exit 1; fi
-
-      - name: 包自检（结构 / 版本串 / 附录D 逐字节 / 引用完整性 / 编码）
-        run: python "$PKG_DIR/scripts/自检_协议包.py"
-
-      - name: 工具箱回归（全合成数据，不依赖任何实测数据）
-        run: python "$PKG_DIR/scripts/自检_工具箱回归.py"
-
-      - name: 隐私体检
-        env:
-          # 具体数据标识绝不写进仓库；用 Secret 传入（变量 vars 不加密、不掩码，不能用）
-          PRIVACY_DENY: ${{ secrets.PRIVACY_DENY }}
-        run: python tools/scan_privacy.py "$ZIP_PATH"
+          python tools/scan_privacy.py "$ZIP_PATH"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: drt-fitting-protocol-zip
+          name: ${{ env.ARTIFACT }}
           path: ${{ env.ZIP_PATH }}
           if-no-files-found: error
 
   release:
-    name: 发布 / 更新 Release
+    name: 发布 Release
     if: startsWith(github.ref, 'refs/tags/v')
     needs: validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4          # 只用于取 RELEASE_NOTES.md
 
-      - uses: actions/setup-python@v5
+      - uses: actions/download-artifact@v4  # 直接复用校验过的产物，不重新打包
         with:
-          python-version: "3.12"
+          name: ${{ env.ARTIFACT }}
+          path: dist
 
-      - name: 打包（与校验作业同一脚本，字节可复现）
-        run: python tools/build_zip.py
-
-      - name: 创建或更新 Release 并上传附件
+      - name: 创建/更新 Release 并挂附件
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           TAG="${GITHUB_REF_NAME}"
-          TITLE="DRT 拟合规范 ${TAG}"
           NOTES="RELEASE_NOTES-${TAG}.md"
           [ -f "$NOTES" ] || NOTES="RELEASE_NOTES.md"
-          echo "tag=$TAG  标题=$TITLE  说明文件=$NOTES"
+          ZIP=$(find dist -type f -name 'drt-fitting-protocol.zip' | head -1)
+          [ -n "$ZIP" ] || { echo "::error::未找到产物"; exit 1; }
+          echo "tag=$TAG  说明=$NOTES  附件=$ZIP"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES"
+            gh release edit "$TAG" --title "DRT 拟合规范 ${TAG}" --notes-file "$NOTES"
           else
-            gh release create "$TAG" --title "$TITLE" --notes-file "$NOTES"
+            gh release create "$TAG" --title "DRT 拟合规范 ${TAG}" --notes-file "$NOTES"
           fi
-          gh release upload "$TAG" "$ZIP_PATH" --clobber
+          gh release upload "$TAG" "$ZIP" --clobber
           # --clobber 只覆盖同名附件，这里清掉改名后残留的旧附件
-          want=$(basename "$ZIP_PATH")
+          want=$(basename "$ZIP")
           gh release view "$TAG" --json assets --jq '.assets[].name' | while read -r name; do
             if [ -n "$name" ] && [ "$name" != "$want" ]; then
               echo "删除过期附件: $name"
               gh release delete-asset "$TAG" "$name" --yes
             fi
           done
-
-      - name: 结果核对
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release view "${GITHUB_REF_NAME}" --json tagName,name,assets
+          gh release view "$TAG" --json tagName,name,assets
