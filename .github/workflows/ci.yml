@@ -59,8 +59,8 @@ jobs:
 
       - name: 隐私体检
         env:
-          # 具体数据标识不写进仓库，用仓库变量传入（留空则只跑通用规则）
-          PRIVACY_DENY: ${{ vars.PRIVACY_DENY }}
+          # 具体数据标识绝不写进仓库；用 Secret 传入（变量 vars 不加密、不掩码，不能用）
+          PRIVACY_DENY: ${{ secrets.PRIVACY_DENY }}
         run: python tools/scan_privacy.py "$ZIP_PATH"
 
       - uses: actions/upload-artifact@v4

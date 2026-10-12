@@ -91,7 +91,9 @@ git add -A && git commit -m "..." && git push
 git tag -a v1.21 -m "DRT 拟合规范 v1.21" && git push origin v1.21
 ```
 
-> 隐私体检的具体禁词**不写在仓库里**（那等于把要藏的东西公开），通过仓库变量 `PRIVACY_DENY`（Settings → Secrets and variables → Actions → Variables）传入；留空则只跑通用规则：数据类扩展名 / 绝对路径 / 家目录 / 邮箱 / 手机号 / NUL。
+> 隐私体检的具体禁词**不写在仓库里**（那等于把要藏的东西公开），通过 **Secret** `PRIVACY_DENY`（Settings → Secrets and variables → Actions → **Secrets** → New repository secret）传入；留空则只跑通用规则：数据类扩展名 / 绝对路径 / 家目录 / 邮箱 / 手机号 / NUL。
+>
+> 注意用 **Secret** 而不是 **Variable** —— Variable 不加密、不掩码，写进去等于公开。
 
 ## 仓库说明
 
