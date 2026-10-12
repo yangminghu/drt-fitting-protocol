@@ -4,7 +4,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-- **版本**：v1.19
+- **版本**：v1.20
 - **许可**：[Apache License 2.0](LICENSE)（开源；允许商用与闭源衍生，须保留版权与许可声明）
 - **触发词**：DRT、弛豫时间分布、DRT 拟合、DRT 分析、EIS 去尾、阻抗谱拟合、R_pol、拟合结果归档
 

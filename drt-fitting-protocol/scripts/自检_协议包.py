@@ -93,10 +93,10 @@ v_fm = re.search(r"^version:\s*([\d.]+)", sk, re.M)
 v_tool = re.search(r"^PROTOCOL_VERSION = \"(v[\d.]+)\"", tb, re.M)
 v_prot = re.search(r"^PROTOCOL = \"[^\"]*?(v[\d.]+)", tb, re.M)
 v_apxd = re.search(r"DRT 拟合原则 (v[\d.]+) —", ad)
-say("P2", v_title and v_fm and v_tool and v_apxd
-    and v_title.group(1) == v_tool.group(1) == v_apxd.group(1)
+say("P2", v_title and v_fm and v_tool and v_apxd and v_prot
+    and v_title.group(1) == v_tool.group(1) == v_apxd.group(1) == v_prot.group(1)
     and _mm(v_fm.group(1)) == _mm(v_title.group(1)),
-    "SKILL 标题=%s / front-matter=%s / 工具箱 PROTOCOL_VERSION=%s（PROTOCOL 串内 %s）/ 附录D 页脚=%s"
+    "SKILL 标题=%s / front-matter=%s / 工具箱 PROTOCOL_VERSION=%s（PROTOCOL 串内必须相同 %s）/ 附录D 页脚=%s"
     % (v_title.group(1), v_fm.group(1), v_tool.group(1), v_prot.group(1), v_apxd.group(1)))
 # P2b（v1.11）：§0 的"用户模板"里也写着版本号 —— 升版时最容易漏改的就是这一行
 # （v1.10→v1.11 时实测漏了：模板还写着 v1.9），模板是用户直接复制粘贴的东西，必须与当前版本一致。

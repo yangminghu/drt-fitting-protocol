@@ -1,5 +1,5 @@
 """
-DRT 归档工具箱 —— 协议 v1.19 §8.0 / §8.4 / §8.0.6（硬门槛 H14 / H16 / H17 / H18 / H19 / H20 / H21）
+DRT 归档工具箱 —— 协议 v1.20 §8.0 / §8.4 / §8.0.6（硬门槛 H14 / H16 / H17 / H18 / H19 / H20 / H21）
 ====================================================================================
 单文件、只依赖 numpy + openpyxl，五个子命令：
 
@@ -45,8 +45,8 @@ try:
 except Exception:
     pass
 
-PROTOCOL = "DRT 拟合原则 v1.17, §8.4（§8.0 命名与目录 H16/H17/H18；§8.0.6 H19/H20；H1′/H5′/H7′；v1.19：同组 L 恒定判据（夹具变更识别）+ LICENSE（专有））"
-PROTOCOL_VERSION = "v1.19"         # H19：与协议文档、本文件唯一常量同步升版
+PROTOCOL = "DRT 拟合原则 v1.20, §8.4（§8.0 命名与目录 H16/H17/H18；§8.0.6 H19/H20；H1′/H5′/H7′；v1.20：同组 L 恒定判据、切弧三判据、峰突出度；许可 Apache-2.0）"
+PROTOCOL_VERSION = "v1.20"         # H19：与协议文档、本文件唯一常量同步升版
 BOUND_TOL = 1e-12                  # H14 第 6 条：生成器与校验器共用同一边界判据
 SUMMARY_SCHEMA = ["sample", "cycle_index", "n_points", "f_min_Hz", "f_max_Hz", "R_ohm", "L_H",
                   "R_pol_total_ohm", "R_pol_in_window_ohm", "R_pol_outside_window_ohm",
