@@ -10,3 +10,5 @@ __pycache__/
 *.pyc
 _w/
 _chk/
+# ===== 构建产物（tools/build_zip.py 的输出，由 CI 重新生成）=====
+dist/

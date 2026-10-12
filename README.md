@@ -72,6 +72,27 @@ python scripts/自检_协议包.py        # 协议包结构与一致性（含根
 python scripts/自检_工具箱回归.py     # 工具箱回归测试（合成数据）
 ```
 
+## 自动校验与发布
+
+仓库带 GitHub Actions（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）：
+
+- **推 `main` / 提 PR**：换行检查 → 确定性打包（跑两遍比对 sha256）→ 包自检 → 工具箱回归 → 隐私体检 → 上传产物
+- **推 `v*` tag**：在上面全部通过后，自动**创建或更新 Release**，并把 `drt-fitting-protocol.zip` 挂成附件（同时清掉改名后残留的过期附件）
+
+打包用 [`tools/build_zip.py`](tools/build_zip.py)：固定时间戳与条目顺序，**同样输入必定得到同样字节** —— 所以本地打的包与 Release 附件逐字节相同，可复现。
+
+发布新版本：
+
+```bash
+# 1) 改包内容，并把版本串升到位（SKILL.md / 工具箱 / 附录 D 的一致性由自检脚本把关）
+# 2) 提交
+git add -A && git commit -m "..." && git push
+# 3) 打 tag 推送 —— 剩下的交给 CI
+git tag -a v1.21 -m "DRT 拟合规范 v1.21" && git push origin v1.21
+```
+
+> 隐私体检的具体禁词**不写在仓库里**（那等于把要藏的东西公开），通过仓库变量 `PRIVACY_DENY`（Settings → Secrets and variables → Actions → Variables）传入；留空则只跑通用规则：数据类扩展名 / 绝对路径 / 家目录 / 邮箱 / 手机号 / NUL。
+
 ## 仓库说明
 
 - 本仓库**不包含任何实验数据**；协议中的示例与回归测试均使用**合成数据**。
